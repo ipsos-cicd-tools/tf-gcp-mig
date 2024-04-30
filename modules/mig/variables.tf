@@ -168,7 +168,7 @@ variable "versions" {
         email  = optional(string, null)
         scopes = optional(list(string), ["cloud-platform"])
       }), null)
-      tags = optional(map(any), {})
+      tags = optional(list(string), [])
       guest_accelerator = optional(object({
         type  = string
         count = number
@@ -203,7 +203,7 @@ variable "autoscaling" {
   type = object({
     name        = string
     description = optional(string, null)
-    zone        = optional(string, null)
+    zone        = string
     project     = optional(string, null)
     autoscaling_policy = object({
       min_replicas    = optional(number, null)

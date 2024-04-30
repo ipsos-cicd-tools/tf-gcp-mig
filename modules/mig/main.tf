@@ -1,5 +1,5 @@
 resource "google_compute_health_check" "default" {
-  count               = (var.auto_healing_policies != null && var.auto_healing_policies.health_check != null) ? 1 : 0
+  count               = var.auto_healing_policies != null ? 1 : 0
   name                = var.auto_healing_policies.health_check.name
   description         = lookup(var.auto_healing_policies.health_check, "description", null)
   healthy_threshold   = lookup(var.auto_healing_policies.health_check, "healthy_threshold", 2)
@@ -74,9 +74,11 @@ resource "google_compute_health_check" "default" {
 }
 
 resource "google_compute_instance_template" "default" {
-  for_each = var.versions
+  for_each = {
+    for k, v in var.versions : v.instance_template.name => v
+  }
 
-  name                 = each.value.name.instance_template
+  name                 = each.value.instance_template.name
   machine_type         = lookup(each.value.instance_template, "machine_type", "n1-standard-1")
   can_ip_forward       = lookup(each.value.instance_template, "can_ip_forward", false)
   description          = lookup(each.value.instance_template, "description", null)
@@ -100,7 +102,7 @@ resource "google_compute_instance_template" "default" {
   }
 
   dynamic "network_interface" {
-    for_each = each.value.instance_template.network_interface
+    for_each = each.value.instance_template.network_interfaces
     content {
       network            = lookup(network_interface.value, "network", null)
       subnetwork         = lookup(network_interface.value, "subnetwork", null)
@@ -139,7 +141,7 @@ resource "google_compute_instance_template" "default" {
     }
   }
 
-  tags = lookup(each.value.instance_template, "tags", null)
+  tags = lookup(each.value.instance_template, "tags", [])
 
   dynamic "guest_accelerator" {
     for_each = each.value.instance_template.guest_accelerator != null ? [each.value.instance_template.guest_accelerator] : []
@@ -187,10 +189,12 @@ resource "google_compute_instance_group_manager" "default" {
   }
 
   dynamic "version" {
-    for_each = var.versions
+    for_each = {
+      for k, v in var.versions : v.name => v
+    }
     content {
-      name              = version.each.name
-      instance_template = google_compute_instance_template.default.self_link
+      name              = version.value.name
+      instance_template = google_compute_instance_template.default[version.value.instance_template.name].self_link
     }
   }
 
@@ -215,7 +219,7 @@ resource "google_compute_autoscaler" "default" {
   description = var.autoscaling.description
   zone        = var.autoscaling.zone
   project     = var.autoscaling.project
-  target      = null
+  target      = google_compute_instance_group_manager.default.self_link
   dynamic "autoscaling_policy" {
     for_each = var.autoscaling.autoscaling_policy != null ? [var.autoscaling.autoscaling_policy] : []
     content {
