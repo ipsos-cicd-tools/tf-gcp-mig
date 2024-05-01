@@ -14,12 +14,6 @@ variable "zone" {
   default     = null
 }
 
-# variable "region" {
-#   description = "value"
-#   type = string
-#   default = null
-# }
-
 variable "description" {
   description = "An optional textual description of the instance group manager."
   type        = string

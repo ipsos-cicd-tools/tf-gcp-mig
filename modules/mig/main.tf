@@ -202,6 +202,8 @@ resource "google_compute_instance_group_manager" "default" {
     }
   }
 
+  depends_on = [google_compute_instance_template.default[version.value.instance_template.name], google_compute_health_check.default[auto_healing_policies.value.health_check.name]]
+
   dynamic "update_policy" {
     for_each = var.update_policy != null ? [var.update_policy] : []
     content {
@@ -230,6 +232,8 @@ resource "google_compute_autoscaler" "default" {
   target      = google_compute_instance_group_manager.default.self_link
   description = lookup(each.value, "description", null)
   project     = lookup(each.value, "project", null)
+
+  depends_on = [google_compute_instance_group_manager.default]
 
   dynamic "autoscaling_policy" {
     for_each = {
