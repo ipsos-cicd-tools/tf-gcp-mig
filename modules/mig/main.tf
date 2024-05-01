@@ -88,16 +88,19 @@ resource "google_compute_instance_template" "default" {
   metadata             = lookup(each.value.instance_template, "metadata", {})
 
   dynamic "disk" {
-    for_each = each.value.instance_template.disks
+    for_each = {
+      for k, v in each.value.instance_template.disks : k => v
+    }
+
     content {
-      disk_name    = disk.value.disk_name
       source_image = disk.value.source_image
+      disk_name    = lookup(disk.value, "disk_name", null)
       auto_delete  = lookup(disk.value, "auto_delete", true)
       boot         = lookup(disk.value, "bool", false)
       device_name  = lookup(disk.value, "device_name", null)
       mode         = lookup(disk.value, "mode", "READ_WRITE")
       disk_type    = lookup(disk.value, "disk_type", "pd-standard")
-      disk_size_gb = lookup(disk.value, "disk_size_gb", 10)
+      disk_size_gb = lookup(disk.value, "disk_size_gb", null)
       labels       = lookup(disk.value, "labels", {})
     }
   }
