@@ -124,14 +124,14 @@ variable "versions" {
       name         = string
       machine_type = string
       disks = list(object({
+        source_image = string
         auto_delete  = optional(bool, true)
         boot         = optional(bool, false)
         device_name  = optional(string, null)
-        disk_name    = string
-        source_image = string
+        disk_name    = optional(string, null)
         mode         = optional(string, "READ_WRITE")
         disk_type    = optional(string, "pd-standard")
-        disk_size_gb = optional(number, 10)
+        disk_size_gb = optional(number, null)
         labels       = optional(map(any), {})
       }))
       can_ip_forward       = optional(bool, false)
