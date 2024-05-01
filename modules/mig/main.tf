@@ -1,14 +1,15 @@
 resource "google_compute_health_check" "default" {
-  count               = var.auto_healing_policies != null ? 1 : 0
-  name                = var.auto_healing_policies.health_check.name
-  description         = lookup(var.auto_healing_policies.health_check, "description", null)
-  healthy_threshold   = lookup(var.auto_healing_policies.health_check, "healthy_threshold", 2)
-  unhealthy_threshold = lookup(var.auto_healing_policies.health_check, "unhealthy_threshold", 2)
-  check_interval_sec  = lookup(var.auto_healing_policies.health_check, "check_interval_sec", 5)
-  timeout_sec         = lookup(var.auto_healing_policies.health_check, "timeout_sec", 5)
+  for_each = var.auto_healing_policies != null ? { "${var.auto_healing_policies.health_check.name}" = var.auto_healing_policies.health_check } : {}
+
+  name                = each.value.name
+  description         = lookup(each.value, "description", null)
+  healthy_threshold   = lookup(each.value, "healthy_threshold", 2)
+  unhealthy_threshold = lookup(each.value, "unhealthy_threshold", 2)
+  check_interval_sec  = lookup(each.value, "check_interval_sec", 5)
+  timeout_sec         = lookup(each.value, "timeout_sec", 5)
 
   dynamic "http_health_check" {
-    for_each = var.auto_healing_policies.health_check.http_health_check != null ? [var.auto_healing_policies.health_check.http_health_check] : []
+    for_each = each.value.http_health_check != null ? [each.value.http_health_check] : []
     content {
       host               = lookup(http_health_check.value, "host", null)
       request_path       = lookup(http_health_check.value, "request_path", "/")
@@ -20,7 +21,7 @@ resource "google_compute_health_check" "default" {
   }
 
   dynamic "https_health_check" {
-    for_each = var.auto_healing_policies.health_check.https_health_check != null ? [var.auto_healing_policies.health_check.https_health_check] : []
+    for_each = each.value.https_health_check != null ? [each.value.https_health_check] : []
     content {
       host               = lookup(https_health_check.value, "host", null)
       request_path       = lookup(https_health_check.value, "request_path", "/")
@@ -32,7 +33,7 @@ resource "google_compute_health_check" "default" {
   }
 
   dynamic "tcp_health_check" {
-    for_each = var.auto_healing_policies.health_check.tcp_health_check != null ? [var.auto_healing_policies.health_check.tcp_health_check] : []
+    for_each = each.value.tcp_health_check != null ? [each.value.tcp_health_check] : []
     content {
       request            = lookup(tcp_health_check.value, "request", null)
       response           = lookup(tcp_health_check.value, "response", null)
@@ -43,7 +44,7 @@ resource "google_compute_health_check" "default" {
   }
 
   dynamic "ssl_health_check" {
-    for_each = var.auto_healing_policies.health_check.ssl_health_check != null ? [var.auto_healing_policies.health_check.ssl_health_check] : []
+    for_each = each.value.ssl_health_check != null ? [each.value.ssl_health_check] : []
     content {
       request            = lookup(ssl_health_check.value, "request", null)
       response           = lookup(ssl_health_check.value, "response", null)
@@ -54,7 +55,7 @@ resource "google_compute_health_check" "default" {
   }
 
   dynamic "http2_health_check" {
-    for_each = var.auto_healing_policies.health_check.http2_health_check != null ? [var.auto_healing_policies.health_check.http2_health_check] : []
+    for_each = each.value.http2_health_check != null ? [each.value.http2_health_check] : []
     content {
       host               = lookup(http2_health_check.value, "host", null)
       request_path       = lookup(http2_health_check.value, "request_path", "/")
@@ -66,7 +67,7 @@ resource "google_compute_health_check" "default" {
   }
 
   dynamic "log_config" {
-    for_each = var.auto_healing_policies.health_check.log_config != null ? [var.auto_healing_policies.health_check.log_config] : []
+    for_each = each.value.log_config != null ? [each.value.log_config] : []
     content {
       enable = lookup(log_config.value, "enable", false)
     }
@@ -168,6 +169,7 @@ resource "google_compute_instance_group_manager" "default" {
   base_instance_name = var.base_instance_name
   zone               = var.zone
   description        = var.description
+
   dynamic "named_port" {
     for_each = var.named_port != null ? [var.named_port] : []
     content {
@@ -175,16 +177,18 @@ resource "google_compute_instance_group_manager" "default" {
       port = lookup(named_port.value, "port", null)
     }
   }
+
   project                        = var.project
   target_size                    = var.target_size
   list_managed_instances_results = var.list_managed_instances_results
   wait_for_instances             = var.wait_for_instances
   wait_for_instances_status      = var.wait_for_instances_status
+
   dynamic "auto_healing_policies" {
     for_each = var.auto_healing_policies != null ? [var.auto_healing_policies] : []
     content {
-      health_check      = google_compute_health_check.default.self_link
-      initial_delay_sec = lookup(auto_healing_policies.value, "initial_delay_sec", null)
+      health_check      = google_compute_health_check.default[auto_healing_policies.value.health_check.name].self_link
+      initial_delay_sec = auto_healing_policies.value.initial_delay_sec
     }
   }
 
@@ -210,21 +214,30 @@ resource "google_compute_instance_group_manager" "default" {
       replacement_method      = lookup(update_policy.value, "replacement_method", "SUBSTITUTE")
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      target_size
+    ]
+  }
 }
 
 resource "google_compute_autoscaler" "default" {
-  for_each = var.autoscaling != null ? [var.autoscaling] : []
+  for_each = var.autoscaling != null ? { "${var.autoscaling.name}" = var.autoscaling } : {}
 
-  name        = var.autoscaling.name
-  description = var.autoscaling.description
-  zone        = var.autoscaling.zone
-  project     = var.autoscaling.project
+  name        = each.value.name
+  zone        = each.value.zone
   target      = google_compute_instance_group_manager.default.self_link
+  description = lookup(each.value, "description", null)
+  project     = lookup(each.value, "project", null)
+
   dynamic "autoscaling_policy" {
-    for_each = var.autoscaling.autoscaling_policy != null ? [var.autoscaling.autoscaling_policy] : []
+    for_each = {
+      for k, v in each.value.autoscaling_policy : k => v
+    }
     content {
-      min_replicas    = lookup(autoscaling_policy.value, "min_replicas", null)
-      max_replicas    = lookup(autoscaling_policy.value, "max_replicas", null)
+      min_replicas    = lookup(autoscaling_policy.value, "min_replicas", 1)
+      max_replicas    = lookup(autoscaling_policy.value, "max_replicas", 1)
       cooldown_period = lookup(autoscaling_policy.value, "cooldown_period", 60)
       mode            = lookup(autoscaling_policy.value, "mode", "OFF")
 
@@ -260,11 +273,11 @@ resource "google_compute_autoscaler" "default" {
       dynamic "scaling_schedules" {
         for_each = autoscaling_policy.value.scaling_schedules != null ? autoscaling_policy.value.scaling_schedules : []
         content {
-          name                  = lookup(scaling_schedules.value, "name", null)
-          min_required_replicas = lookup(scaling_schedules.value, "min_required_replicas", null)
-          schedule              = lookup(scaling_schedules.value, "schedule", null)
+          name                  = scaling_schedules.value.name
+          min_required_replicas = scaling_schedules.value.min_required_replicas
+          schedule              = scaling_schedules.value.schedule
+          duration_sec          = scaling_schedules.value.duration_sec
           time_zone             = lookup(scaling_schedules.value, "time_zone", null)
-          duration_sec          = lookup(scaling_schedules.value, "duration_sec", null)
           disabled              = lookup(scaling_schedules.value, "disabled", false)
           description           = lookup(scaling_schedules.value, "description", null)
         }

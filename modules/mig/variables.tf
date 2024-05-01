@@ -205,9 +205,9 @@ variable "autoscaling" {
     description = optional(string, null)
     zone        = string
     project     = optional(string, null)
-    autoscaling_policy = object({
-      min_replicas    = optional(number, null)
-      max_replicas    = optional(number, null)
+    autoscaling_policy = list(object({
+      min_replicas    = number
+      max_replicas    = number
       cooldown_period = optional(number, 60)
       mode            = optional(string, "OFF")
       scale_in_control = optional(object({
@@ -224,16 +224,16 @@ variable "autoscaling" {
       load_balancing_utilization = optional(object({
         target = optional(number, 0.8)
       }), null)
-      scaling_schedules = optional(list(object({
+      scaling_schedules = list(object({
         name                  = string
         min_required_replicas = number
         schedule              = string
-        time_zone             = string
+        time_zone             = optional(string, null)
         duration_sec          = number
         disabled              = optional(bool, false)
         description           = optional(string, null)
-      })), null)
-    })
+      }))
+    }))
   })
   default = null
 }
