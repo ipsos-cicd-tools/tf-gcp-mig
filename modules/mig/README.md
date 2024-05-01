@@ -3,7 +3,7 @@
 Basic usage of this module is as follows:
 ```
 module "mig" {
-  source  = "git::https://github.com/ipsos-cicd-tools/<repo name>//modules/mig?ref=<version number>"
+  source  = "git::https://github.com/ipsos-cicd-tools/tf-gcp-mig//modules/mig?ref=<version number>"
   
   ## Required Variables ##
   base_instance_name  = 
