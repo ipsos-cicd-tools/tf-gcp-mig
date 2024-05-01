@@ -94,7 +94,7 @@ resource "google_compute_instance_template" "default" {
 
     content {
       source_image = disk.value.source_image
-      disk_name    = lookup(disk.value, "disk_name", null)# disk.value.disk_name
+      disk_name    = lookup(disk.value, "disk_name", null) # disk.value.disk_name
       auto_delete  = lookup(disk.value, "auto_delete", true)
       boot         = lookup(disk.value, "bool", false)
       device_name  = lookup(disk.value, "device_name", null)
