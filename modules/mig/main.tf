@@ -1,5 +1,5 @@
 resource "google_compute_health_check" "default" {
-  for_each = var.auto_healing_policies != null ? { "${var.auto_healing_policies.health_check.name}" = var.auto_healing_policies.health_check } : {}
+  for_each = var.auto_healing_policies != null ? { (var.auto_healing_policies.health_check.name) = var.auto_healing_policies.health_check } : {}
 
   name                = each.value.name
   description         = lookup(each.value, "description", null)
@@ -202,7 +202,7 @@ resource "google_compute_instance_group_manager" "default" {
     }
   }
 
-  depends_on = [google_compute_instance_template.default[version.value.instance_template.name], google_compute_health_check.default[auto_healing_policies.value.health_check.name]]
+  depends_on = [google_compute_instance_template.default, google_compute_health_check.default]
 
   dynamic "update_policy" {
     for_each = var.update_policy != null ? [var.update_policy] : []
@@ -225,7 +225,7 @@ resource "google_compute_instance_group_manager" "default" {
 }
 
 resource "google_compute_autoscaler" "default" {
-  for_each = var.autoscaling != null ? { "${var.autoscaling.name}" = var.autoscaling } : {}
+  for_each = var.autoscaling != null ? { (var.autoscaling.name) = var.autoscaling } : {}
 
   name        = each.value.name
   zone        = each.value.zone
