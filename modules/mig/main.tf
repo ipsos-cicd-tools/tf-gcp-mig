@@ -162,6 +162,13 @@ resource "google_compute_instance_template" "default" {
       enable_integrity_monitoring = lookup(shielded_instance_config.value, "enable_integrity_monitoring", true)
     }
   }
+
+  dynamic "confidential_instance_config" {
+    for_each = each.value.instance_template.confidential_instance_config != null ? [each.value.instance_template.confidential_instance_config] : []
+    content {
+      enable_confidential_compute = lookup(confidential_instance_config.value, "enable_confidential_compute", false)
+    }
+  }
 }
 
 resource "google_compute_instance_group_manager" "default" {
