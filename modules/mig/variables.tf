@@ -173,6 +173,9 @@ variable "versions" {
         enable_vtpm                 = optional(bool, true)
         enable_integrity_monitoring = optional(bool, true)
       }), null)
+      confidential_instance_config = optional(object({
+        enable_confidential_compute = optional(bool, false)
+      }), null)
     })
   }))
   default = []
