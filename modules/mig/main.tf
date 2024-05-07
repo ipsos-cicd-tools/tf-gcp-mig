@@ -76,20 +76,20 @@ resource "google_compute_health_check" "default" {
 
 resource "google_compute_instance_template" "default" {
   for_each = {
-    for k, v in var.versions : v.instance_template.name => v
+    for k, v in var.templates : v.name => v
   }
 
-  name                 = each.value.instance_template.name
-  machine_type         = lookup(each.value.instance_template, "machine_type", "n1-standard-1")
-  can_ip_forward       = lookup(each.value.instance_template, "can_ip_forward", false)
-  description          = lookup(each.value.instance_template, "description", null)
-  instance_description = lookup(each.value.instance_template, "instance_description", null)
-  labels               = lookup(each.value.instance_template, "labels", {})
-  metadata             = lookup(each.value.instance_template, "metadata", {})
+  name                 = each.value.name
+  machine_type         = lookup(each.value, "machine_type", "n1-standard-1")
+  can_ip_forward       = lookup(each.value, "can_ip_forward", false)
+  description          = lookup(each.value, "description", null)
+  instance_description = lookup(each.value, "instance_description", null)
+  labels               = lookup(each.value, "labels", {})
+  metadata             = lookup(each.value, "metadata", {})
 
   dynamic "disk" {
     for_each = {
-      for k, v in each.value.instance_template.disks : k => v
+      for k, v in each.value.disks : k => v
     }
 
     content {
@@ -107,7 +107,7 @@ resource "google_compute_instance_template" "default" {
   }
 
   dynamic "network_interface" {
-    for_each = each.value.instance_template.network_interfaces
+    for_each = each.value.network_interfaces
     content {
       network            = lookup(network_interface.value, "network", null)
       subnetwork         = lookup(network_interface.value, "subnetwork", null)
@@ -118,18 +118,18 @@ resource "google_compute_instance_template" "default" {
     }
   }
 
-  project = lookup(each.value.instance_template, "project", null)
-  region  = lookup(each.value.instance_template, "region", null)
+  project = lookup(each.value, "project", null)
+  region  = lookup(each.value, "region", null)
 
   dynamic "reservation_affinity" {
-    for_each = each.value.instance_template.reservation_affinity != null ? [each.value.instance_template.reservation_affinity] : []
+    for_each = each.value.reservation_affinity != null ? [each.value.reservation_affinity] : []
     content {
       type = lookup(reservation_affinity.value, "type", "ANY_RESERVATION")
     }
   }
 
   dynamic "scheduling" {
-    for_each = each.value.instance_template.scheduling != null ? [each.value.instance_template.scheduling] : []
+    for_each = each.value.scheduling != null ? [each.value.scheduling] : []
     content {
       automatic_restart   = lookup(scheduling.value, "automatic_restart", true)
       on_host_maintenance = lookup(scheduling.value, "on_host_maintenance", "MIGRATE")
@@ -139,17 +139,17 @@ resource "google_compute_instance_template" "default" {
   }
 
   dynamic "service_account" {
-    for_each = each.value.instance_template.service_account != null ? [each.value.instance_template.service_account] : []
+    for_each = each.value.service_account != null ? [each.value.service_account] : []
     content {
       email  = lookup(service_account.value, "email", null)
       scopes = lookup(service_account.value, "scopes", ["cloud-platform"])
     }
   }
 
-  tags = lookup(each.value.instance_template, "tags", [])
+  tags = lookup(each.value, "tags", [])
 
   dynamic "guest_accelerator" {
-    for_each = each.value.instance_template.guest_accelerator != null ? [each.value.instance_template.guest_accelerator] : []
+    for_each = each.value.guest_accelerator != null ? [each.value.guest_accelerator] : []
     content {
       type  = lookup(guest_accelerator.value, "type", null)
       count = lookup(guest_accelerator.value, "count", 0)
@@ -159,7 +159,7 @@ resource "google_compute_instance_template" "default" {
   min_cpu_platform = lookup(each.value, "min_cpu_platform", null)
 
   dynamic "shielded_instance_config" {
-    for_each = each.value.instance_template.shielded_instance_config != null ? [each.value.instance_template.shielded_instance_config] : []
+    for_each = each.value.shielded_instance_config != null ? [each.value.shielded_instance_config] : []
     content {
       enable_secure_boot          = lookup(shielded_instance_config.value, "enable_secure_boot", false)
       enable_vtpm                 = lookup(shielded_instance_config.value, "enable_vtpm", true)
@@ -168,7 +168,7 @@ resource "google_compute_instance_template" "default" {
   }
 
   dynamic "confidential_instance_config" {
-    for_each = each.value.instance_template.confidential_instance_config != null ? [each.value.instance_template.confidential_instance_config] : []
+    for_each = each.value.confidential_instance_config != null ? [each.value.confidential_instance_config] : []
     content {
       enable_confidential_compute = lookup(confidential_instance_config.value, "enable_confidential_compute", false)
     }
@@ -209,7 +209,7 @@ resource "google_compute_instance_group_manager" "default" {
     }
     content {
       name              = version.value.name
-      instance_template = google_compute_instance_template.default[version.value.instance_template.name].self_link
+      instance_template = google_compute_instance_template.default[version.value.instance_template].self_link
 
       dynamic "target_size" {
         for_each = version.value.target_size != null ? [version.value.target_size] : []

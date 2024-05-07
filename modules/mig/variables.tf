@@ -116,68 +116,72 @@ variable "auto_healing_policies" {
   default = null
 }
 
+variable "templates" {
+  description = "value"
+  type = list(object({
+    name         = string
+    machine_type = string
+    disks = list(object({
+      source_image = optional(string, null)
+      source       = optional(string, null)
+      auto_delete  = optional(bool, true)
+      boot         = optional(bool, false)
+      device_name  = optional(string, null)
+      disk_name    = optional(string, null)
+      mode         = optional(string, "READ_WRITE")
+      disk_type    = optional(string, "pd-standard")
+      disk_size_gb = optional(number, null)
+      labels       = optional(map(any), {})
+    }))
+    can_ip_forward       = optional(bool, false)
+    description          = optional(string, null)
+    instance_description = optional(string, null)
+    labels               = optional(map(any), {})
+    metadata             = optional(map(any), {})
+    network_interfaces = list(object({
+      network            = optional(string, null)
+      subnetwork         = optional(string, null)
+      subnetwork_project = optional(string, null)
+      network_ip         = optional(string, null)
+      queue_count        = optional(number, null)
+      stack_type         = optional(string, "IPV4_ONLY")
+    }))
+    project = optional(string, null)
+    region  = optional(string, null)
+    reservation_affinity = optional(object({
+      type = optional(string, "ANY_RESERVATION")
+    }), null)
+    scheduling = optional(object({
+      automatic_restart   = optional(bool, true)
+      on_host_maintenance = optional(string, "MIGRATE")
+      preemptible         = optional(bool, false)
+      provisioning_model  = optional(string, "STANDARD")
+    }))
+    service_account = optional(object({
+      email  = optional(string, null)
+      scopes = optional(list(string), ["cloud-platform"])
+    }), null)
+    tags = optional(list(string), [])
+    guest_accelerator = optional(object({
+      type  = string
+      count = number
+    }), null)
+    min_cpu_platform = optional(string, null)
+    shielded_instance_config = optional(object({
+      enable_secure_boot          = optional(bool, false)
+      enable_vtpm                 = optional(bool, true)
+      enable_integrity_monitoring = optional(bool, true)
+    }), null)
+    confidential_instance_config = optional(object({
+      enable_confidential_compute = optional(bool, false)
+    }), null)
+  }))
+}
 variable "versions" {
   description = "Application versions managed by this instance group. Each version deals with a specific instance template, allowing canary release scenarios."
   type = list(object({
-    name = string
-    instance_template = object({
-      name         = string
-      machine_type = string
-      disks = list(object({
-        source_image = optional(string, null)
-        source       = optional(string, null)
-        auto_delete  = optional(bool, true)
-        boot         = optional(bool, false)
-        device_name  = optional(string, null)
-        disk_name    = optional(string, null)
-        mode         = optional(string, "READ_WRITE")
-        disk_type    = optional(string, "pd-standard")
-        disk_size_gb = optional(number, null)
-        labels       = optional(map(any), {})
-      }))
-      can_ip_forward       = optional(bool, false)
-      description          = optional(string, null)
-      instance_description = optional(string, null)
-      labels               = optional(map(any), {})
-      metadata             = optional(map(any), {})
-      network_interfaces = list(object({
-        network            = optional(string, null)
-        subnetwork         = optional(string, null)
-        subnetwork_project = optional(string, null)
-        network_ip         = optional(string, null)
-        queue_count        = optional(number, null)
-        stack_type         = optional(string, "IPV4_ONLY")
-      }))
-      project = optional(string, null)
-      region  = optional(string, null)
-      reservation_affinity = optional(object({
-        type = optional(string, "ANY_RESERVATION")
-      }), null)
-      scheduling = optional(object({
-        automatic_restart   = optional(bool, true)
-        on_host_maintenance = optional(string, "MIGRATE")
-        preemptible         = optional(bool, false)
-        provisioning_model  = optional(string, "STANDARD")
-      }))
-      service_account = optional(object({
-        email  = optional(string, null)
-        scopes = optional(list(string), ["cloud-platform"])
-      }), null)
-      tags = optional(list(string), [])
-      guest_accelerator = optional(object({
-        type  = string
-        count = number
-      }), null)
-      min_cpu_platform = optional(string, null)
-      shielded_instance_config = optional(object({
-        enable_secure_boot          = optional(bool, false)
-        enable_vtpm                 = optional(bool, true)
-        enable_integrity_monitoring = optional(bool, true)
-      }), null)
-      confidential_instance_config = optional(object({
-        enable_confidential_compute = optional(bool, false)
-      }), null)
-    })
+    name              = string
+    instance_template = string
     target_size = optional(object({
       fixed   = optional(number, null)
       percent = optional(number, null)
