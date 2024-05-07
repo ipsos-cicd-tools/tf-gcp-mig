@@ -178,6 +178,10 @@ variable "versions" {
         enable_confidential_compute = optional(bool, false)
       }), null)
     })
+    target_size = optional(object({
+      fixed   = optional(number, null)
+      percent = optional(number, null)
+    }))
   }))
   default = []
 }
