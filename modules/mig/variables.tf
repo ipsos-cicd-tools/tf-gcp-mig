@@ -124,7 +124,8 @@ variable "versions" {
       name         = string
       machine_type = string
       disks = list(object({
-        source_image = string
+        source_image = optional(string, null)
+        source       = optional(string, null)
         auto_delete  = optional(bool, true)
         boot         = optional(bool, false)
         device_name  = optional(string, null)

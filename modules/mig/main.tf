@@ -93,10 +93,11 @@ resource "google_compute_instance_template" "default" {
     }
 
     content {
-      source_image = disk.value.source_image
+      source_image = lookup(disk.value, "source_image", null)
+      source       = lookup(disk.value, "source", null)
       disk_name    = lookup(disk.value, "disk_name", null)
       auto_delete  = lookup(disk.value, "auto_delete", true)
-      boot         = lookup(disk.value, "bool", false)
+      boot         = lookup(disk.value, "boot", false)
       device_name  = lookup(disk.value, "device_name", null)
       mode         = lookup(disk.value, "mode", "READ_WRITE")
       disk_type    = lookup(disk.value, "disk_type", "pd-standard")
