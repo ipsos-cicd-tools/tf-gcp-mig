@@ -210,6 +210,14 @@ resource "google_compute_instance_group_manager" "default" {
     content {
       name              = version.value.name
       instance_template = google_compute_instance_template.default[version.value.instance_template.name].self_link
+
+      dynamic "target_size" {
+        for_each = version.value.target_size != null ? [version.value.target_size] : []
+        content {
+          fixed   = lookup(target_size.value, "fixed", null)
+          percent = lookup(target_size.value, "percent", null)
+        }
+      }
     }
   }
 
