@@ -181,7 +181,7 @@ variable "versions" {
     target_size = optional(object({
       fixed   = optional(number, null)
       percent = optional(number, null)
-    }))
+    }), null)
   }))
   default = []
 }

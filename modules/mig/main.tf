@@ -218,6 +218,7 @@ resource "google_compute_instance_group_manager" "default" {
           percent = lookup(target_size.value, "percent", null)
         }
       }
+
     }
   }
 
