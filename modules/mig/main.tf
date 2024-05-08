@@ -99,8 +99,8 @@ resource "google_compute_instance_template" "default" {
       auto_delete  = lookup(disk.value, "auto_delete", true)
       boot         = lookup(disk.value, "boot", false)
       device_name  = lookup(disk.value, "device_name", null)
-      mode         = lookup(disk.value, "mode", "READ_WRITE")
-      disk_type    = lookup(disk.value, "disk_type", "pd-standard")
+      mode         = lookup(disk.value, "mode", null)
+      disk_type    = lookup(disk.value, "disk_type", null)
       disk_size_gb = lookup(disk.value, "disk_size_gb", null)
       labels       = lookup(disk.value, "labels", {})
     }
