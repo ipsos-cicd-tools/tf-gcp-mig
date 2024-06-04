@@ -182,7 +182,9 @@ resource "google_compute_instance_group_manager" "default" {
   description        = var.description
 
   dynamic "named_port" {
-    for_each = var.named_port != null ? [var.named_port] : []
+    for_each = {
+      for k, v in(var.named_ports != null ? var.named_ports : []) : v.name => v
+    }
     content {
       name = lookup(named_port.value, "name", null)
       port = lookup(named_port.value, "port", null)
