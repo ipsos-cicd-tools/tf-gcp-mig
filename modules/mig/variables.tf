@@ -20,13 +20,13 @@ variable "description" {
   default     = null
 }
 
-variable "named_port" {
+variable "named_ports" {
   description = "The named port configuration."
-  type = object({
+  type = list(object({
     name = string
     port = number
-  })
-  default = null
+  }))
+  default = []
 }
 
 variable "project" {
